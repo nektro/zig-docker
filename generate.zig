@@ -22,6 +22,7 @@ pub fn main() !void {
 
     try w.writeAll("const internal = @import(\"./internal.zig\");\n");
     try w.writeAll("const string = []const u8;\n");
+    try w.writeAll("const Top = @This();\n");
 
     {
         std.debug.print("definitions:\n", .{});
@@ -150,14 +151,18 @@ fn printEndpoint(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mappin
 }
 
 fn printMethod(alloc: std.mem.Allocator, w: std.fs.File.Writer, method: string, m: yaml.Mapping) !void {
+    try w.writeAll("    pub usingnamespace internal.Fn(\n");
+    try w.writeAll(".");
+    try w.writeAll(method);
+    try w.writeAll(",");
+    try w.writeAll("internal.name(Top, @This()),");
+
     try printParamStruct(alloc, w, m, method, "path");
     try printParamStruct(alloc, w, m, method, "query");
     try printParamStruct(alloc, w, m, method, "body");
 
     {
-        try w.writeAll("    pub const ");
-        try capitalize(w, method);
-        try w.writeAll("R = union(enum) {\n");
+        try w.writeAll("union(enum) {\n");
         for (m.getT("responses", .mapping).?.items) |item| {
             try w.print("        @\"{s}\": ", .{item.key});
             const mm: yaml.Mapping = item.value.mapping;
@@ -177,10 +182,9 @@ fn printMethod(alloc: std.mem.Allocator, w: std.fs.File.Writer, method: string, 
 
             try w.writeAll(",\n");
         }
-        try w.writeAll("    };\n");
+        try w.writeAll("    },\n");
     }
-
-    // TODO internal namespace things
+    try w.writeAll(");\n");
 
     try w.writeAll("\n");
 }
@@ -200,11 +204,9 @@ fn hasParamsOf(m: yaml.Mapping, kind: string) bool {
 }
 
 fn printParamStruct(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, method: string, ty: string) !void {
+    _ = method;
     if (hasParamsOf(m, ty)) {
-        try w.writeAll("    pub const ");
-        try capitalize(w, method);
-        try w.writeAll(&.{std.ascii.toUpper(ty[0])});
-        try w.writeAll(" = struct {");
+        try w.writeAll("struct {");
         var n: usize = 0;
         for (m.getT("parameters", .sequence).?) |item| {
             const mm: yaml.Mapping = item.mapping;
@@ -221,7 +223,9 @@ fn printParamStruct(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Map
                 }
             }
         }
-        try w.writeAll("};\n");
+        try w.writeAll("},\n");
+    } else {
+        try w.writeAll("void,\n");
     }
 }
 
