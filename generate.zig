@@ -11,6 +11,8 @@ pub fn main() !void {
     // Using local document because upstream has missing chunks
     // https://github.com/moby/moby/issues/43336
     // https://github.com/moby/moby/issues/43337
+    // https://github.com/moby/moby/issues/43341
+    // https://github.com/moby/moby/issues/43345
     const body_content = @embedFile("./swagger.yaml");
     const doc = try yaml.parse(alloc, body_content);
 
