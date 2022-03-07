@@ -116,7 +116,7 @@ fn contains(haystack: []const string, needle: string) bool {
             return true;
         }
     }
-    return true;
+    return false;
 }
 
 fn printId(w: std.fs.File.Writer, id: string) !void {
