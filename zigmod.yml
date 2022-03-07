@@ -1,6 +1,6 @@
 id: jygy5tdmnagk2k0gr8jqyfn666x4kklf8obdxlneecn4z1fv
 name: docker
-main: docker.zig
+main: src/direct.zig
 license: MIT
 description: Zig bindings for the Docker Engine API
 root_dependencies:
