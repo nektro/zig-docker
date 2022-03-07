@@ -156,9 +156,9 @@ fn printMethod(alloc: std.mem.Allocator, w: std.fs.File.Writer, method: string, 
     try w.writeAll(",");
     try w.writeAll("internal.name(Top, @This()),");
 
-    try printParamStruct(alloc, w, m, method, "path");
-    try printParamStruct(alloc, w, m, method, "query");
-    try printParamStruct(alloc, w, m, method, "body");
+    try printParamStruct(alloc, w, m, "path");
+    try printParamStruct(alloc, w, m, "query");
+    try printParamStruct(alloc, w, m, "body");
 
     {
         try w.writeAll("union(enum) {\n");
@@ -202,8 +202,7 @@ fn hasParamsOf(m: yaml.Mapping, kind: string) bool {
     return false;
 }
 
-fn printParamStruct(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, method: string, ty: string) !void {
-    _ = method;
+fn printParamStruct(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, ty: string) !void {
     if (hasParamsOf(m, ty)) {
         try w.writeAll("struct {");
         var n: usize = 0;

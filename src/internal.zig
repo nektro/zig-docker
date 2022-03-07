@@ -39,13 +39,6 @@ pub fn name(comptime Top: type, comptime This: type) []const u8 {
 }
 
 pub fn Fn(comptime method: Method, comptime endpoint: []const u8, comptime P: type, comptime Q: type, comptime B: type, comptime R: type) type {
-    _ = method;
-    _ = endpoint;
-    _ = P;
-    _ = Q;
-    _ = B;
-    _ = R;
-
     return struct {
         pub usingnamespace switch (method) {
             .get => struct {
