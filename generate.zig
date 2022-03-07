@@ -71,7 +71,7 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) E
                 const reqs = try m.get_string_array(alloc, "required");
 
                 for (m.get("properties").?.mapping.items) |item| {
-                    try std.zig.fmtId(item.key).format("", .{}, w);
+                    try printId(w, item.key);
                     try w.writeAll(": ");
                     if (reqs.len > 0) {
                         if (!contains(reqs, item.key)) try w.writeAll("?");
@@ -97,7 +97,7 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) E
             try w.writeAll("enum {");
             for (enumcap.sequence) |item| {
                 if (item.string.len == 0) continue;
-                try std.zig.fmtId(item.string).format("", .{}, w);
+                try printId(w, item.string);
                 try w.writeAll(",");
             }
             try w.writeAll("}");
@@ -117,4 +117,8 @@ fn contains(haystack: []const string, needle: string) bool {
         }
     }
     return true;
+}
+
+fn printId(w: std.fs.File.Writer, id: string) !void {
+    try std.zig.fmtId(id).format("", .{}, w);
 }
