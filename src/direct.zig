@@ -2,9 +2,9 @@ const internal = @import("./internal.zig");
 const string = []const u8;
 
 pub const Port = struct {
-    IP: string,
+    IP: ?string = null,
     PrivatePort: i32,
-    PublicPort: i32,
+    PublicPort: ?i32 = null,
     Type: enum {
         tcp,
         udp,
@@ -315,30 +315,30 @@ pub const GraphDriverData = struct {
 
 pub const Image = struct {
     Id: string,
-    RepoTags: []const string,
-    RepoDigests: []const string,
+    RepoTags: ?[]const string = null,
+    RepoDigests: ?[]const string = null,
     Parent: string,
     Comment: string,
     Created: string,
     Container: string,
-    ContainerConfig: ContainerConfig,
+    ContainerConfig: ?ContainerConfig = null,
     DockerVersion: string,
     Author: string,
-    Config: ContainerConfig,
+    Config: ?ContainerConfig = null,
     Architecture: string,
     Os: string,
-    OsVersion: string,
+    OsVersion: ?string = null,
     Size: i32,
     VirtualSize: i32,
     GraphDriver: GraphDriverData,
     RootFS: struct {
         Type: string,
-        Layers: []const string,
-        BaseLayer: string,
+        Layers: ?[]const string = null,
+        BaseLayer: ?string = null,
     },
-    Metadata: struct {
+    Metadata: ?struct {
         LastTagTime: string,
-    },
+    } = null,
 };
 
 pub const ImageSummary = struct {
@@ -373,18 +373,18 @@ pub const Volume = struct {
     Name: string,
     Driver: string,
     Mountpoint: string,
-    CreatedAt: string,
-    Status: struct {},
+    CreatedAt: ?string = null,
+    Status: ?struct {} = null,
     Labels: struct {},
     Scope: enum {
         local,
         global,
     },
     Options: struct {},
-    UsageData: struct {
+    UsageData: ?struct {
         Size: i32,
         RefCount: i32,
-    },
+    } = null,
 };
 
 pub const Network = struct {
@@ -537,7 +537,7 @@ pub const PluginPrivilege = struct {
 };
 
 pub const Plugin = struct {
-    Id: string,
+    Id: ?string = null,
     Name: string,
     Enabled: bool,
     Settings: struct {
@@ -546,24 +546,24 @@ pub const Plugin = struct {
         Args: []const string,
         Devices: []const PluginDevice,
     },
-    PluginReference: string,
+    PluginReference: ?string = null,
     Config: struct {
-        DockerVersion: string,
+        DockerVersion: ?string = null,
         Description: string,
         Documentation: string,
         Interface: struct {
             Types: []const PluginInterfaceType,
             Socket: string,
-            ProtocolScheme: enum {
+            ProtocolScheme: ?enum {
                 @"moby.plugins.http/v1",
-            },
+            } = null,
         },
         Entrypoint: []const string,
         WorkDir: string,
-        User: struct {
+        User: ?struct {
             UID: i32,
             GID: i32,
-        },
+        } = null,
         Network: struct {
             Type: string,
         },
@@ -583,10 +583,10 @@ pub const Plugin = struct {
             Settable: []const string,
             Value: []const string,
         },
-        rootfs: struct {
+        rootfs: ?struct {
             type: string,
             diff_ids: []const string,
-        },
+        } = null,
     },
 };
 
@@ -1038,7 +1038,7 @@ pub const ContainerSummary = struct {
 
 pub const Driver = struct {
     Name: string,
-    Options: struct {},
+    Options: ?struct {} = null,
 };
 
 pub const SecretSpec = struct {
@@ -1102,7 +1102,7 @@ pub const SystemVersion = struct {
     Components: []const struct {
         Name: string,
         Version: string,
-        Details: struct {},
+        Details: ?struct {} = null,
     },
     Version: string,
     ApiVersion: string,
