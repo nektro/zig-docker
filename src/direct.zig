@@ -1305,3 +1305,1207 @@ pub const DistributionInspect = struct {
     Descriptor: OCIDescriptor,
     Platforms: []const OCIPlatform,
 };
+
+pub const @"/containers/json" = struct {
+    pub const GetQ = struct { all: bool = false, limit: i32, size: bool = false, filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const ContainerSummary,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/create" = struct {
+    pub const PostQ = struct { name: string };
+    pub const PostB = struct { body: internal.AllOf(&.{
+        ContainerConfig,
+        struct {
+            HostConfig: HostConfig,
+            NetworkingConfig: NetworkingConfig,
+        },
+    }) };
+    pub const PostR = union(enum) {
+        @"201": struct {
+            Id: string,
+            Warnings: []const string,
+        },
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/json" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { size: bool = false };
+    pub const GetR = union(enum) {
+        @"200": struct {
+            Id: string,
+            Created: string,
+            Path: string,
+            Args: []const string,
+            State: ContainerState,
+            Image: string,
+            ResolvConfPath: string,
+            HostnamePath: string,
+            HostsPath: string,
+            LogPath: string,
+            Name: string,
+            RestartCount: i32,
+            Driver: string,
+            Platform: string,
+            MountLabel: string,
+            ProcessLabel: string,
+            AppArmorProfile: string,
+            ExecIDs: []const string,
+            HostConfig: HostConfig,
+            GraphDriver: GraphDriverData,
+            SizeRw: i32,
+            SizeRootFs: i32,
+            Mounts: []const MountPoint,
+            Config: ContainerConfig,
+            NetworkSettings: NetworkSettings,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/top" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { ps_args: string = "-ef" };
+    pub const GetR = union(enum) {
+        @"200": struct {
+            Titles: []const string,
+            Processes: []const []const string,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/logs" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { follow: bool = false, stdout: bool = false, stderr: bool = false, since: i32 = 0, until: i32 = 0, timestamps: bool = false, tail: string = "all" };
+    pub const GetR = union(enum) {
+        @"200": string,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/changes" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": []const struct {
+            Path: string,
+            Kind: i32,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/export" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": []const u8,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/stats" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { stream: bool = true, @"one-shot": bool = false };
+    pub const GetR = union(enum) {
+        @"200": struct {},
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/resize" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { h: i32, w: i32 };
+    pub const PostR = union(enum) {
+        @"200": []const u8,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/start" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { detachKeys: string };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"304": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/stop" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { t: i32 };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"304": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/restart" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { t: i32 };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/kill" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { signal: string = "SIGKILL" };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/update" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostB = struct { update: internal.AllOf(&.{
+        Resources,
+        struct {
+            RestartPolicy: RestartPolicy,
+        },
+    }) };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            Warnings: []const string,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/rename" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { name: string };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/pause" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/unpause" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/attach" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { detachKeys: string, logs: bool = false, stream: bool = false, stdin: bool = false, stdout: bool = false, stderr: bool = false };
+    pub const PostR = union(enum) {
+        @"101": void,
+        @"200": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/attach/ws" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { detachKeys: string, logs: bool = false, stream: bool = false, stdin: bool = false, stdout: bool = false, stderr: bool = false };
+    pub const GetR = union(enum) {
+        @"101": void,
+        @"200": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/wait" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { condition: string = "not-running" };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            StatusCode: i32,
+            Error: ?struct {
+                Message: string,
+            } = null,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}" = struct {
+    pub const DeleteP = struct { id: string };
+    pub const DeleteQ = struct { v: bool = false, force: bool = false, link: bool = false };
+    pub const DeleteR = union(enum) {
+        @"204": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/archive" = struct {
+    pub const HeadP = struct { id: string };
+    pub const HeadQ = struct { path: string };
+    pub const HeadR = union(enum) {
+        @"200": void,
+        @"400": internal.AllOf(&.{
+            ErrorResponse,
+            struct {
+                message: string,
+            },
+        }),
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { path: string };
+    pub const GetR = union(enum) {
+        @"200": void,
+        @"400": internal.AllOf(&.{
+            ErrorResponse,
+            struct {
+                message: string,
+            },
+        }),
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+
+    pub const PutP = struct { id: string };
+    pub const PutQ = struct { path: string, noOverwriteDirNonDir: string, copyUIDGID: string };
+    pub const PutB = struct { inputStream: string };
+    pub const PutR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"403": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/prune" = struct {
+    pub const PostQ = struct { filters: string };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            ContainersDeleted: []const string,
+            SpaceReclaimed: i32,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/json" = struct {
+    pub const GetQ = struct { all: bool = false, filters: string, digests: bool = false };
+    pub const GetR = union(enum) {
+        @"200": []const ImageSummary,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/build" = struct {
+    pub const PostQ = struct { dockerfile: string = "Dockerfile", t: string, extrahosts: string, remote: string, q: bool = false, nocache: bool = false, cachefrom: string, pull: string, rm: bool = true, forcerm: bool = false, memory: i32, memswap: i32, cpushares: i32, cpusetcpus: string, cpuperiod: i32, cpuquota: i32, buildargs: string, shmsize: i32, squash: bool, labels: string, networkmode: string, platform: string = "", target: string = "", outputs: string = "" };
+    pub const PostB = struct { inputStream: string };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/build/prune" = struct {
+    pub const PostQ = struct { @"keep-storage": i32, all: bool, filters: string };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            CachesDeleted: []const string,
+            SpaceReclaimed: i32,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/create" = struct {
+    pub const PostQ = struct { fromImage: string, fromSrc: string, repo: string, tag: string, message: string, changes: []const string, platform: string = "" };
+    pub const PostB = struct { inputImage: string };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/{name}/json" = struct {
+    pub const GetP = struct { name: string };
+    pub const GetR = union(enum) {
+        @"200": Image,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/{name}/history" = struct {
+    pub const GetP = struct { name: string };
+    pub const GetR = union(enum) {
+        @"200": []const struct {
+            Id: string,
+            Created: i32,
+            CreatedBy: string,
+            Tags: []const string,
+            Size: i32,
+            Comment: string,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/{name}/push" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostQ = struct { tag: string };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/{name}/tag" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostQ = struct { repo: string, tag: string };
+    pub const PostR = union(enum) {
+        @"201": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/{name}" = struct {
+    pub const DeleteP = struct { name: string };
+    pub const DeleteQ = struct { force: bool = false, noprune: bool = false };
+    pub const DeleteR = union(enum) {
+        @"200": []const ImageDeleteResponseItem,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/search" = struct {
+    pub const GetQ = struct { term: string, limit: i32, filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const struct {
+            description: string,
+            is_official: bool,
+            is_automated: bool,
+            name: string,
+            star_count: i32,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/prune" = struct {
+    pub const PostQ = struct { filters: string };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            ImagesDeleted: []const ImageDeleteResponseItem,
+            SpaceReclaimed: i32,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/auth" = struct {
+    pub const PostB = struct { authConfig: AuthConfig };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            Status: string,
+            IdentityToken: ?string = null,
+        },
+        @"204": void,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/info" = struct {
+    pub const GetR = union(enum) {
+        @"200": SystemInfo,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/version" = struct {
+    pub const GetR = union(enum) {
+        @"200": SystemVersion,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/_ping" = struct {
+    pub const GetR = union(enum) {
+        @"200": string,
+        @"500": ErrorResponse,
+    };
+
+    pub const HeadR = union(enum) {
+        @"200": string,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/commit" = struct {
+    pub const PostQ = struct { container: string, repo: string, tag: string, comment: string, author: string, pause: bool = true, changes: string };
+    pub const PostB = struct { containerConfig: ContainerConfig };
+    pub const PostR = union(enum) {
+        @"201": IdResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/events" = struct {
+    pub const GetQ = struct { since: string, until: string, filters: string };
+    pub const GetR = union(enum) {
+        @"200": EventMessage,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/system/df" = struct {
+    pub const GetR = union(enum) {
+        @"200": struct {
+            LayersSize: i32,
+            Images: []const ImageSummary,
+            Containers: []const ContainerSummary,
+            Volumes: []const Volume,
+            BuildCache: []const BuildCache,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/{name}/get" = struct {
+    pub const GetP = struct { name: string };
+    pub const GetR = union(enum) {
+        @"200": string,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/get" = struct {
+    pub const GetQ = struct { names: []const string };
+    pub const GetR = union(enum) {
+        @"200": string,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/images/load" = struct {
+    pub const PostQ = struct { quiet: bool = false };
+    pub const PostB = struct { imagesTarball: string };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/containers/{id}/exec" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostB = struct { execConfig: struct {
+        AttachStdin: bool,
+        AttachStdout: bool,
+        AttachStderr: bool,
+        DetachKeys: string,
+        Tty: bool,
+        Env: []const string,
+        Cmd: []const string,
+        Privileged: bool,
+        User: string,
+        WorkingDir: string,
+    } };
+    pub const PostR = union(enum) {
+        @"201": IdResponse,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/exec/{id}/start" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostB = struct { execStartConfig: struct {
+        Detach: bool,
+        Tty: bool,
+    } };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+    };
+};
+
+pub const @"/exec/{id}/resize" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { h: i32, w: i32 };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/exec/{id}/json" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": struct {
+            CanRemove: bool,
+            DetachKeys: string,
+            ID: string,
+            Running: bool,
+            ExitCode: i32,
+            ProcessConfig: ProcessConfig,
+            OpenStdin: bool,
+            OpenStderr: bool,
+            OpenStdout: bool,
+            ContainerID: string,
+            Pid: i32,
+        },
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/volumes" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": struct {
+            Volumes: []const Volume,
+            Warnings: []const string,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/volumes/create" = struct {
+    pub const PostB = struct { volumeConfig: struct {
+        Name: string,
+        Driver: string,
+        DriverOpts: struct {},
+        Labels: struct {},
+    } };
+    pub const PostR = union(enum) {
+        @"201": Volume,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/volumes/{name}" = struct {
+    pub const GetP = struct { name: string };
+    pub const GetR = union(enum) {
+        @"200": Volume,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+
+    pub const DeleteP = struct { name: string };
+    pub const DeleteQ = struct { force: bool = false };
+    pub const DeleteR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/volumes/prune" = struct {
+    pub const PostQ = struct { filters: string };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            VolumesDeleted: []const string,
+            SpaceReclaimed: i32,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/networks" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const Network,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/networks/{id}" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { verbose: bool = false, scope: string };
+    pub const GetR = union(enum) {
+        @"200": Network,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+
+    pub const DeleteP = struct { id: string };
+    pub const DeleteR = union(enum) {
+        @"204": void,
+        @"403": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/networks/create" = struct {
+    pub const PostB = struct { networkConfig: struct {
+        Name: string,
+        CheckDuplicate: ?bool = null,
+        Driver: ?string = null,
+        Internal: ?bool = null,
+        Attachable: ?bool = null,
+        Ingress: ?bool = null,
+        IPAM: ?IPAM = null,
+        EnableIPv6: ?bool = null,
+        Options: ?struct {} = null,
+        Labels: ?struct {} = null,
+    } };
+    pub const PostR = union(enum) {
+        @"201": struct {
+            Id: string,
+            Warning: string,
+        },
+        @"403": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/networks/{id}/connect" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostB = struct { container: struct {
+        Container: string,
+        EndpointConfig: EndpointSettings,
+    } };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"403": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/networks/{id}/disconnect" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostB = struct { container: struct {
+        Container: string,
+        Force: bool,
+    } };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"403": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/networks/prune" = struct {
+    pub const PostQ = struct { filters: string };
+    pub const PostR = union(enum) {
+        @"200": struct {
+            NetworksDeleted: []const string,
+        },
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const Plugin,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/privileges" = struct {
+    pub const GetQ = struct { remote: string };
+    pub const GetR = union(enum) {
+        @"200": []const PluginPrivilege,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/pull" = struct {
+    pub const PostQ = struct { remote: string, name: string };
+    pub const PostB = struct { body: []const PluginPrivilege };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}/json" = struct {
+    pub const GetP = struct { name: string };
+    pub const GetR = union(enum) {
+        @"200": Plugin,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}" = struct {
+    pub const DeleteP = struct { name: string };
+    pub const DeleteQ = struct { force: bool = false };
+    pub const DeleteR = union(enum) {
+        @"200": Plugin,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}/enable" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostQ = struct { timeout: i32 = 0 };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}/disable" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}/upgrade" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostQ = struct { remote: string };
+    pub const PostB = struct { body: []const PluginPrivilege };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/create" = struct {
+    pub const PostQ = struct { name: string };
+    pub const PostB = struct { tarContext: string };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}/push" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/plugins/{name}/set" = struct {
+    pub const PostP = struct { name: string };
+    pub const PostB = struct { body: []const string };
+    pub const PostR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/nodes" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const Node,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/nodes/{id}" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": Node,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+
+    pub const DeleteP = struct { id: string };
+    pub const DeleteQ = struct { force: bool = false };
+    pub const DeleteR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/nodes/{id}/update" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { version: i32 };
+    pub const PostB = struct { body: NodeSpec };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm" = struct {
+    pub const GetR = union(enum) {
+        @"200": Swarm,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm/init" = struct {
+    pub const PostB = struct { body: struct {
+        ListenAddr: string,
+        AdvertiseAddr: string,
+        DataPathAddr: string,
+        DataPathPort: i32,
+        DefaultAddrPool: []const string,
+        ForceNewCluster: bool,
+        SubnetSize: i32,
+        Spec: SwarmSpec,
+    } };
+    pub const PostR = union(enum) {
+        @"200": string,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm/join" = struct {
+    pub const PostB = struct { body: struct {
+        ListenAddr: string,
+        AdvertiseAddr: string,
+        DataPathAddr: string,
+        RemoteAddrs: []const string,
+        JoinToken: string,
+    } };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm/leave" = struct {
+    pub const PostQ = struct { force: bool = false };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm/update" = struct {
+    pub const PostQ = struct { version: i32, rotateWorkerToken: bool = false, rotateManagerToken: bool = false, rotateManagerUnlockKey: bool = false };
+    pub const PostB = struct { body: SwarmSpec };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm/unlockkey" = struct {
+    pub const GetR = union(enum) {
+        @"200": struct {
+            UnlockKey: string,
+        },
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/swarm/unlock" = struct {
+    pub const PostB = struct { body: struct {
+        UnlockKey: string,
+    } };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/services" = struct {
+    pub const GetQ = struct { filters: string, status: bool };
+    pub const GetR = union(enum) {
+        @"200": []const Service,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/services/create" = struct {
+    pub const PostB = struct { body: internal.AllOf(&.{
+        ServiceSpec,
+        struct {},
+    }) };
+    pub const PostR = union(enum) {
+        @"201": struct {
+            ID: string,
+            Warning: string,
+        },
+        @"400": ErrorResponse,
+        @"403": ErrorResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/services/{id}" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { insertDefaults: bool = false };
+    pub const GetR = union(enum) {
+        @"200": Service,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+
+    pub const DeleteP = struct { id: string };
+    pub const DeleteR = union(enum) {
+        @"200": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/services/{id}/update" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { version: i32, registryAuthFrom: enum {
+        spec,
+        @"previous-spec",
+    } = "spec", rollback: string };
+    pub const PostB = struct { body: internal.AllOf(&.{
+        ServiceSpec,
+        struct {},
+    }) };
+    pub const PostR = union(enum) {
+        @"200": ServiceUpdateResponse,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/services/{id}/logs" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { details: bool = false, follow: bool = false, stdout: bool = false, stderr: bool = false, since: i32 = 0, timestamps: bool = false, tail: string = "all" };
+    pub const GetR = union(enum) {
+        @"200": string,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/tasks" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const Task,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/tasks/{id}" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": Task,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/tasks/{id}/logs" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetQ = struct { details: bool = false, follow: bool = false, stdout: bool = false, stderr: bool = false, since: i32 = 0, timestamps: bool = false, tail: string = "all" };
+    pub const GetR = union(enum) {
+        @"200": string,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/secrets" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const Secret,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/secrets/create" = struct {
+    pub const PostB = struct { body: internal.AllOf(&.{
+        SecretSpec,
+        struct {},
+    }) };
+    pub const PostR = union(enum) {
+        @"201": IdResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/secrets/{id}" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": Secret,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+
+    pub const DeleteP = struct { id: string };
+    pub const DeleteR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/secrets/{id}/update" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { version: i32 };
+    pub const PostB = struct { body: SecretSpec };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/configs" = struct {
+    pub const GetQ = struct { filters: string };
+    pub const GetR = union(enum) {
+        @"200": []const Config,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/configs/create" = struct {
+    pub const PostB = struct { body: internal.AllOf(&.{
+        ConfigSpec,
+        struct {},
+    }) };
+    pub const PostR = union(enum) {
+        @"201": IdResponse,
+        @"409": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/configs/{id}" = struct {
+    pub const GetP = struct { id: string };
+    pub const GetR = union(enum) {
+        @"200": Config,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+
+    pub const DeleteP = struct { id: string };
+    pub const DeleteR = union(enum) {
+        @"204": void,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/configs/{id}/update" = struct {
+    pub const PostP = struct { id: string };
+    pub const PostQ = struct { version: i32 };
+    pub const PostB = struct { body: ConfigSpec };
+    pub const PostR = union(enum) {
+        @"200": void,
+        @"400": ErrorResponse,
+        @"404": ErrorResponse,
+        @"500": ErrorResponse,
+        @"503": ErrorResponse,
+    };
+};
+
+pub const @"/distribution/{name}/json" = struct {
+    pub const GetP = struct { name: string };
+    pub const GetR = union(enum) {
+        @"200": DistributionInspect,
+        @"401": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
+
+pub const @"/session" = struct {
+    pub const PostR = union(enum) {
+        @"101": void,
+        @"400": ErrorResponse,
+        @"500": ErrorResponse,
+    };
+};
