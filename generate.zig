@@ -26,7 +26,6 @@ pub fn main() !void {
     {
         std.debug.print("definitions:\n", .{});
         for (doc.mapping.get("definitions").?.mapping.items) |item| {
-            // std.debug.print("- {s}\n", .{item.key});
             std.debug.print("|", .{});
 
             try w.writeAll("\npub const ");
