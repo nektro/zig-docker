@@ -17,9 +17,6 @@ pub fn main() !void {
     const f = try std.fs.cwd().createFile("src/direct.zig", .{});
     const w = f.writer();
 
-    _ = doc;
-    _ = w;
-
     try w.writeAll("const internal = @import(\"./internal.zig\");\n");
     try w.writeAll("const string = []const u8;\n");
     try w.writeAll("const Top = @This();\n");
