@@ -1,6 +1,5 @@
 const std = @import("std");
 const string = []const u8;
-const zfetch = @import("zfetch");
 const yaml = @import("yaml");
 
 pub fn main() !void {

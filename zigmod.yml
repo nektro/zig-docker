@@ -4,8 +4,6 @@ main: docker.zig
 license: MIT
 description: Zig bindings for the Docker Engine API
 root_dependencies:
-  - src: git https://github.com/truemedian/zfetch
-
   # Copied from Zigmod, maybe we should make this a package
   - src: local yaml yaml.zig
   - src: git https://github.com/yaml/libyaml tag-0.2.5
