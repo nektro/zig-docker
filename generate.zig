@@ -77,6 +77,9 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) E
                         if (!contains(reqs, item.key)) try w.writeAll("?");
                     }
                     try printType(alloc, w, item.value.mapping);
+                    if (reqs.len > 0) {
+                        if (!contains(reqs, item.key)) try w.writeAll(" = null");
+                    }
                     try w.writeAll(",");
                 }
             }
