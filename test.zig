@@ -13,6 +13,6 @@ pub fn main() !void {
     }, {});
 
     for (list.@"200") |item| {
-        std.log.info("{s}", .{item});
+        std.log.info("{s} {s} {s} {d} {s} {s} {s}", .{ item.Id, item.Image, item.Command, item.Created, item.Status, item.Ports, item.Names });
     }
 }
