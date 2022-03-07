@@ -231,8 +231,3 @@ fn printDefault(w: std.fs.File.Writer, def: string, ty: string) !void {
     if (std.mem.eql(u8, ty, "integer")) return try w.writeAll(def);
     @panic(ty);
 }
-
-fn codeHasNoContent(code: string) bool {
-    if (std.mem.eql(u8, code, "204")) return true;
-    @panic(code);
-}
