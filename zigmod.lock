@@ -1,8 +1,7 @@
 2
-git https://github.com/truemedian/zfetch commit-210c49965640a7d0ce532793f9b435e022bf2f18
+git https://github.com/truemedian/zfetch commit-eb39dd67d05b9790d870b04dbd5c2af4742d29de
 git https://github.com/truemedian/hzzp commit-bf5aaf224e94561e035a631c3c40fbf02faa27d2
 git https://github.com/nektro/iguanaTLS commit-9a05f03681d5f273d0ce7447f0c7e729828ab8a2
-git https://github.com/MasterQ32/zig-network commit-bb77ec3469535967651f41c6ea260e357cce73d7
 git https://github.com/MasterQ32/zig-uri commit-e879df3a236869f92298fbe2db3c25e6e84cfd4c
 git https://gist.github.com/nektro/917368c242e9be1a832816bc66d10d63 commit-d917db1e4b68faaaed6ecbdd7774f1959dc76fa5
 git https://github.com/nektro/zig-extras commit-b16f583d5af5c86c92237bf56fa8063a5e9961c3

@@ -66,8 +66,6 @@ pub fn Fn(comptime method: Method, comptime endpoint: string, comptime P: type, 
         fn inner(alloc: std.mem.Allocator, argsP: P, argsQ: Q, argsB: B) !R {
             @setEvalBranchQuota(1_000_000);
 
-            const stream = try std.net.connectUnixSocket("/var/run/docker.sock");
-
             const endpoint_actual = comptime replace(replace(endpoint, '{', "{["), '}', "]s}");
             const url = try std.fmt.allocPrint(alloc, "http://localhost" ++ "/" ++ shared.version ++ endpoint_actual, if (P != void) argsP else .{});
 
@@ -77,8 +75,8 @@ pub fn Fn(comptime method: Method, comptime endpoint: string, comptime P: type, 
             const full_url = try std.mem.concat(alloc, u8, &.{ url, "?", try paramsQ.encode() });
             std.log.debug("{s} {s}", .{ @tagName(fixMethod(method)), full_url });
 
-            const req = try newRequest(alloc, stream, full_url);
-            defer req.deinit();
+            var conn = try zfetch.Connection.connect(alloc, .{ .protocol = .unix, .hostname = "/var/run/docker.sock" });
+            var req = try zfetch.Request.fromConnection(alloc, conn, full_url);
 
             var paramsB = try newUrlValues(alloc, B, argsB);
             defer paramsB.inner.deinit();
@@ -150,50 +148,6 @@ fn meta_fields(comptime T: type) []const std.builtin.TypeInfo.StructField {
     };
 }
 
-fn newRequest(allocator: std.mem.Allocator, stream: std.net.Stream, url: string) !*zfetch.Request {
-    const uri = try zuri.parse(url);
-
-    const protocol = zfetch.Protocol.http;
-
-    var req = try allocator.create(zfetch.Request);
-    errdefer allocator.destroy(req);
-
-    if (uri.host == null) return error.MissingHost;
-
-    req.allocator = allocator;
-    req.socket = zfetch.Connection{
-        .allocator = allocator,
-        .hostname = uri.host.?,
-        .protocol = protocol,
-        .port = 80,
-        .socket = stream,
-    };
-
-    req.buffer = try allocator.alloc(u8, std.mem.page_size);
-    errdefer allocator.free(req.buffer);
-
-    req.url = url;
-    req.uri = uri;
-
-    req.buffered_reader = try allocator.create(BufferedReader);
-    errdefer allocator.destroy(req.buffered_reader);
-    req.buffered_reader.* = .{ .unbuffered_reader = req.socket.reader() };
-
-    req.buffered_writer = try allocator.create(BufferedWriter);
-    errdefer allocator.destroy(req.buffered_writer);
-    req.buffered_writer.* = .{ .unbuffered_writer = req.socket.writer() };
-
-    req.client = HttpClient.init(req.buffer, req.buffered_reader.reader(), req.buffered_writer.writer());
-
-    req.headers = hzzp.Headers.init(allocator);
-    req.status = zfetch.Request.Status{
-        .code = 0,
-        .reason = "",
-    };
-
-    return req;
-}
-
 fn fixMethod(m: Method) zfetch.Method {
     return switch (m) {
         .get => .GET,
@@ -204,7 +158,3 @@ fn fixMethod(m: Method) zfetch.Method {
         .delete => .DELETE,
     };
 }
-
-const HttpClient = hzzp.base.client.BaseClient(BufferedReader.Reader, BufferedWriter.Writer);
-const BufferedReader = std.io.BufferedReader(std.mem.page_size, zfetch.Connection.Reader);
-const BufferedWriter = std.io.BufferedWriter(std.mem.page_size, zfetch.Connection.Writer);
