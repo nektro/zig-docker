@@ -29,7 +29,7 @@ pub const Method = enum {
     delete,
 };
 
-pub fn name(comptime Top: type, comptime This: type) []const u8 {
+pub fn name(comptime Top: type, comptime This: type) string {
     inline for (std.meta.declarations(Top)) |item| {
         if (item.is_pub and @field(Top, item.name) == This) {
             return item.name;
@@ -38,7 +38,7 @@ pub fn name(comptime Top: type, comptime This: type) []const u8 {
     @compileError("not found");
 }
 
-pub fn Fn(comptime method: Method, comptime endpoint: []const u8, comptime P: type, comptime Q: type, comptime B: type, comptime R: type) type {
+pub fn Fn(comptime method: Method, comptime endpoint: string, comptime P: type, comptime Q: type, comptime B: type, comptime R: type) type {
     return struct {
         pub usingnamespace switch (method) {
             .get => struct {
@@ -108,13 +108,13 @@ pub fn Fn(comptime method: Method, comptime endpoint: []const u8, comptime P: ty
     };
 }
 
-fn replace(comptime haystack: []const u8, comptime needle: u8, comptime replacement: []const u8) []const u8 {
-    comptime var res: []const u8 = &.{};
+fn replace(comptime haystack: string, comptime needle: u8, comptime replacement: string) string {
+    comptime var res: string = &.{};
     inline for (haystack) |c| {
         if (c == needle) {
             res = res ++ replacement;
         } else {
-            const temp: []const u8 = &.{c};
+            const temp: string = &.{c};
             res = res ++ temp;
         }
     }
