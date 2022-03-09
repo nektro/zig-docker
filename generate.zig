@@ -116,7 +116,6 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) E
         if (m.get("enum")) |enumcap| {
             try w.writeAll("enum {");
             for (enumcap.sequence) |item| {
-                if (item.string.len == 0) continue;
                 try printId(w, item.string);
                 try w.writeAll(",");
             }
@@ -140,6 +139,7 @@ fn contains(haystack: []const string, needle: string) bool {
 }
 
 fn printId(w: std.fs.File.Writer, id: string) !void {
+    if (id.len == 0) return try w.writeAll("@\"\""); // https://github.com/ziglang/zig/issues/11099
     try std.zig.fmtId(id).format("", .{}, w);
 }
 
