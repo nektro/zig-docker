@@ -59,7 +59,28 @@ pub fn Fn(comptime method: Method, comptime endpoint: string, comptime P: type, 
             },
         };
 
+        // TODO check P/Q/B against void and assign this to inner1/inner2/inner respectively, currently causes ICE
         const real = inner;
+
+        fn inner1_P(alloc: std.mem.Allocator, args: P) !R {
+            return inner(alloc, args, {}, {});
+        }
+        fn inner1_Q(alloc: std.mem.Allocator, args: Q) !R {
+            return inner(alloc, {}, args, {});
+        }
+        fn inner1_B(alloc: std.mem.Allocator, args: B) !R {
+            return inner(alloc, {}, {}, args);
+        }
+
+        fn inner2_PQ(alloc: std.mem.Allocator, args1: P, args2: Q) !R {
+            return inner(alloc, args1, args2, {});
+        }
+        fn inner2_PB(alloc: std.mem.Allocator, args1: P, args2: B) !R {
+            return inner(alloc, args1, {}, args2);
+        }
+        fn inner2_QB(alloc: std.mem.Allocator, args1: Q, args2: B) !R {
+            return inner(alloc, {}, args1, args2);
+        }
 
         fn inner(alloc: std.mem.Allocator, argsP: P, argsQ: Q, argsB: B) !R {
             @setEvalBranchQuota(1_000_000);
