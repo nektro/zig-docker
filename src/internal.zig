@@ -2,8 +2,6 @@ const std = @import("std");
 const string = []const u8;
 const zfetch = @import("zfetch");
 const UrlValues = @import("UrlValues");
-const zuri = @import("uri");
-const hzzp = @import("hzzp");
 const extras = @import("extras");
 
 const shared = @import("./shared.zig");

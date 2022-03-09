@@ -8,6 +8,4 @@ root_dependencies:
 dependencies:
   - src: git https://github.com/truemedian/zfetch
   - src: git https://gist.github.com/nektro/917368c242e9be1a832816bc66d10d63 # UrlValues
-  - src: git https://github.com/MasterQ32/zig-uri
-  - src: git https://github.com/truemedian/hzzp
   - src: git https://github.com/nektro/zig-extras
