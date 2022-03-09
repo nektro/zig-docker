@@ -31,7 +31,7 @@ pub fn main() !void {
             try w.writeAll("\npub const ");
             try w.writeAll(item.key);
             try w.writeAll(" = ");
-            try printType(alloc, w, item.value.mapping);
+            try printType(alloc, w, item.value.mapping, true);
             try w.writeAll(";\n");
         }
         std.debug.print("\n", .{});
@@ -53,26 +53,29 @@ pub fn main() !void {
 }
 
 const Error = std.fs.File.Writer.Error || std.mem.Allocator.Error;
-fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) Error!void {
+fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, trailingcomma: bool) Error!void {
     {
         const ref = m.get_string("$ref");
-        if (std.mem.startsWith(u8, ref, "#/definitions/")) return try w.writeAll(ref["#/definitions/".len..]);
+        if (std.mem.startsWith(u8, ref, "#/definitions/")) {
+            return try w.writeAll(ref["#/definitions/".len..]);
+        }
     }
 
     {
         const of = m.get("allOf");
         if (of != null) {
             try w.writeAll("internal.AllOf(&.{");
-            for (of.?.sequence) |item| {
-                try printType(alloc, w, item.mapping);
-                try w.writeAll(",");
+            for (of.?.sequence) |item, i| {
+                if (i > 0) try w.writeAll(",");
+                try printType(alloc, w, item.mapping, trailingcomma);
             }
+            if (trailingcomma) try w.writeAll(",");
             try w.writeAll("})");
             return;
         }
     }
     if (m.get("schema")) |cap| {
-        return printType(alloc, w, cap.mapping);
+        return printType(alloc, w, cap.mapping, trailingcomma);
     }
 
     const apitype = m.get_string("type");
@@ -87,18 +90,19 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) E
             if (m.get("properties") != null) {
                 const reqs = try m.get_string_array(alloc, "required");
 
-                for (m.get("properties").?.mapping.items) |item| {
+                for (m.get("properties").?.mapping.items) |item, i| {
+                    if (i > 0) try w.writeAll(",");
                     try printId(w, item.key);
                     try w.writeAll(": ");
                     if (reqs.len > 0) {
                         if (!contains(reqs, item.key)) try w.writeAll("?");
                     }
-                    try printType(alloc, w, item.value.mapping);
+                    try printType(alloc, w, item.value.mapping, trailingcomma);
                     if (reqs.len > 0) {
                         if (!contains(reqs, item.key)) try w.writeAll(" = null");
                     }
-                    try w.writeAll(",");
                 }
+                if (trailingcomma) try w.writeAll(",");
             }
         }
 
@@ -108,17 +112,18 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping) E
 
     if (std.mem.eql(u8, apitype, "array")) {
         try w.writeAll("[]const ");
-        try printType(alloc, w, m.get("items").?.mapping);
+        try printType(alloc, w, m.get("items").?.mapping, trailingcomma);
         return;
     }
 
     if (std.mem.eql(u8, apitype, "string")) {
         if (m.get("enum")) |enumcap| {
             try w.writeAll("enum {");
-            for (enumcap.sequence) |item| {
+            for (enumcap.sequence) |item, i| {
+                if (i > 0) try w.writeAll(",");
                 try printId(w, item.string);
-                try w.writeAll(",");
             }
+            if (trailingcomma) try w.writeAll(",");
             try w.writeAll("}");
             return;
         }
@@ -168,7 +173,7 @@ fn printMethod(alloc: std.mem.Allocator, w: std.fs.File.Writer, method: string, 
             const produces = try m.get_string_array(alloc, "produces");
 
             if (mm.get("type") != null or mm.get("schema") != null) {
-                try printType(alloc, w, mm);
+                try printType(alloc, w, mm, false);
             } else if ((contains(produces, "application/octet-stream") or contains(produces, "text/plain")) and std.mem.eql(u8, item.key, "200")) {
                 try w.writeAll("[]const u8");
             } else if (mm.items.len == 1 and mm.get("description") != null) {
@@ -213,7 +218,7 @@ fn printParamStruct(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Map
                 if (n > 0) try w.writeAll(", ");
                 try printId(w, mm.get_string("name"));
                 try w.writeAll(": ");
-                try printType(alloc, w, mm);
+                try printType(alloc, w, mm, false);
 
                 if (mm.get("default")) |cap| {
                     try w.writeAll(" = ");

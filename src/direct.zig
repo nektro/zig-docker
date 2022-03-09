@@ -1331,18 +1331,9 @@ pub const @"/containers/create" = struct {
         internal.name(Top, @This()),
         void,
         struct { name: string },
-        struct { body: internal.AllOf(&.{
-            ContainerConfig,
-            struct {
-                HostConfig: HostConfig,
-                NetworkingConfig: NetworkingConfig,
-            },
-        }) },
+        struct { body: internal.AllOf(&.{ ContainerConfig, struct { HostConfig: HostConfig, NetworkingConfig: NetworkingConfig } }) },
         union(enum) {
-            @"201": struct {
-                Id: string,
-                Warnings: []const string,
-            },
+            @"201": struct { Id: string, Warnings: []const string },
             @"400": ErrorResponse,
             @"404": ErrorResponse,
             @"409": ErrorResponse,
@@ -1359,33 +1350,7 @@ pub const @"/containers/{id}/json" = struct {
         struct { size: bool = false },
         void,
         union(enum) {
-            @"200": struct {
-                Id: string,
-                Created: string,
-                Path: string,
-                Args: []const string,
-                State: ContainerState,
-                Image: string,
-                ResolvConfPath: string,
-                HostnamePath: string,
-                HostsPath: string,
-                LogPath: string,
-                Name: string,
-                RestartCount: i32,
-                Driver: string,
-                Platform: string,
-                MountLabel: string,
-                ProcessLabel: string,
-                AppArmorProfile: string,
-                ExecIDs: []const string,
-                HostConfig: HostConfig,
-                GraphDriver: GraphDriverData,
-                SizeRw: i32,
-                SizeRootFs: i32,
-                Mounts: []const MountPoint,
-                Config: ContainerConfig,
-                NetworkSettings: NetworkSettings,
-            },
+            @"200": struct { Id: string, Created: string, Path: string, Args: []const string, State: ContainerState, Image: string, ResolvConfPath: string, HostnamePath: string, HostsPath: string, LogPath: string, Name: string, RestartCount: i32, Driver: string, Platform: string, MountLabel: string, ProcessLabel: string, AppArmorProfile: string, ExecIDs: []const string, HostConfig: HostConfig, GraphDriver: GraphDriverData, SizeRw: i32, SizeRootFs: i32, Mounts: []const MountPoint, Config: ContainerConfig, NetworkSettings: NetworkSettings },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1400,10 +1365,7 @@ pub const @"/containers/{id}/top" = struct {
         struct { ps_args: string = "-ef" },
         void,
         union(enum) {
-            @"200": struct {
-                Titles: []const string,
-                Processes: []const []const string,
-            },
+            @"200": struct { Titles: []const string, Processes: []const []const string },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1433,10 +1395,7 @@ pub const @"/containers/{id}/changes" = struct {
         void,
         void,
         union(enum) {
-            @"200": []const struct {
-                Path: string,
-                Kind: i32,
-            },
+            @"200": []const struct { Path: string, Kind: i32 },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1557,16 +1516,9 @@ pub const @"/containers/{id}/update" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { update: internal.AllOf(&.{
-            Resources,
-            struct {
-                RestartPolicy: RestartPolicy,
-            },
-        }) },
+        struct { update: internal.AllOf(&.{ Resources, struct { RestartPolicy: RestartPolicy } }) },
         union(enum) {
-            @"200": struct {
-                Warnings: []const string,
-            },
+            @"200": struct { Warnings: []const string },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1661,12 +1613,7 @@ pub const @"/containers/{id}/wait" = struct {
         struct { condition: string = "not-running" },
         void,
         union(enum) {
-            @"200": struct {
-                StatusCode: i32,
-                Error: ?struct {
-                    Message: string,
-                } = null,
-            },
+            @"200": struct { StatusCode: i32, Error: ?struct { Message: string } = null },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1743,10 +1690,7 @@ pub const @"/containers/prune" = struct {
         struct { filters: string },
         void,
         union(enum) {
-            @"200": struct {
-                ContainersDeleted: []const string,
-                SpaceReclaimed: i32,
-            },
+            @"200": struct { ContainersDeleted: []const string, SpaceReclaimed: i32 },
             @"500": ErrorResponse,
         },
     );
@@ -1789,10 +1733,7 @@ pub const @"/build/prune" = struct {
         struct { @"keep-storage": i32, all: bool, filters: string },
         void,
         union(enum) {
-            @"200": struct {
-                CachesDeleted: []const string,
-                SpaceReclaimed: i32,
-            },
+            @"200": struct { CachesDeleted: []const string, SpaceReclaimed: i32 },
             @"500": ErrorResponse,
         },
     );
@@ -1836,14 +1777,7 @@ pub const @"/images/{name}/history" = struct {
         void,
         void,
         union(enum) {
-            @"200": []const struct {
-                Id: string,
-                Created: i32,
-                CreatedBy: string,
-                Tags: []const string,
-                Size: i32,
-                Comment: string,
-            },
+            @"200": []const struct { Id: string, Created: i32, CreatedBy: string, Tags: []const string, Size: i32, Comment: string },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1906,13 +1840,7 @@ pub const @"/images/search" = struct {
         struct { term: string, limit: i32, filters: string },
         void,
         union(enum) {
-            @"200": []const struct {
-                description: string,
-                is_official: bool,
-                is_automated: bool,
-                name: string,
-                star_count: i32,
-            },
+            @"200": []const struct { description: string, is_official: bool, is_automated: bool, name: string, star_count: i32 },
             @"500": ErrorResponse,
         },
     );
@@ -1926,10 +1854,7 @@ pub const @"/images/prune" = struct {
         struct { filters: string },
         void,
         union(enum) {
-            @"200": struct {
-                ImagesDeleted: []const ImageDeleteResponseItem,
-                SpaceReclaimed: i32,
-            },
+            @"200": struct { ImagesDeleted: []const ImageDeleteResponseItem, SpaceReclaimed: i32 },
             @"500": ErrorResponse,
         },
     );
@@ -1943,10 +1868,7 @@ pub const @"/auth" = struct {
         void,
         struct { authConfig: AuthConfig },
         union(enum) {
-            @"200": struct {
-                Status: string,
-                IdentityToken: ?string = null,
-            },
+            @"200": struct { Status: string, IdentityToken: ?string = null },
             @"204": void,
             @"500": ErrorResponse,
         },
@@ -2045,13 +1967,7 @@ pub const @"/system/df" = struct {
         void,
         void,
         union(enum) {
-            @"200": struct {
-                LayersSize: i32,
-                Images: []const ImageSummary,
-                Containers: []const ContainerSummary,
-                Volumes: []const Volume,
-                BuildCache: []const BuildCache,
-            },
+            @"200": struct { LayersSize: i32, Images: []const ImageSummary, Containers: []const ContainerSummary, Volumes: []const Volume, BuildCache: []const BuildCache },
             @"500": ErrorResponse,
         },
     );
@@ -2105,18 +2021,7 @@ pub const @"/containers/{id}/exec" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { execConfig: struct {
-            AttachStdin: bool,
-            AttachStdout: bool,
-            AttachStderr: bool,
-            DetachKeys: string,
-            Tty: bool,
-            Env: []const string,
-            Cmd: []const string,
-            Privileged: bool,
-            User: string,
-            WorkingDir: string,
-        } },
+        struct { execConfig: struct { AttachStdin: bool, AttachStdout: bool, AttachStderr: bool, DetachKeys: string, Tty: bool, Env: []const string, Cmd: []const string, Privileged: bool, User: string, WorkingDir: string } },
         union(enum) {
             @"201": IdResponse,
             @"404": ErrorResponse,
@@ -2132,10 +2037,7 @@ pub const @"/exec/{id}/start" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { execStartConfig: struct {
-            Detach: bool,
-            Tty: bool,
-        } },
+        struct { execStartConfig: struct { Detach: bool, Tty: bool } },
         union(enum) {
             @"200": void,
             @"404": ErrorResponse,
@@ -2168,19 +2070,7 @@ pub const @"/exec/{id}/json" = struct {
         void,
         void,
         union(enum) {
-            @"200": struct {
-                CanRemove: bool,
-                DetachKeys: string,
-                ID: string,
-                Running: bool,
-                ExitCode: i32,
-                ProcessConfig: ProcessConfig,
-                OpenStdin: bool,
-                OpenStderr: bool,
-                OpenStdout: bool,
-                ContainerID: string,
-                Pid: i32,
-            },
+            @"200": struct { CanRemove: bool, DetachKeys: string, ID: string, Running: bool, ExitCode: i32, ProcessConfig: ProcessConfig, OpenStdin: bool, OpenStderr: bool, OpenStdout: bool, ContainerID: string, Pid: i32 },
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -2195,10 +2085,7 @@ pub const @"/volumes" = struct {
         struct { filters: string },
         void,
         union(enum) {
-            @"200": struct {
-                Volumes: []const Volume,
-                Warnings: []const string,
-            },
+            @"200": struct { Volumes: []const Volume, Warnings: []const string },
             @"500": ErrorResponse,
         },
     );
@@ -2210,12 +2097,7 @@ pub const @"/volumes/create" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { volumeConfig: struct {
-            Name: string,
-            Driver: string,
-            DriverOpts: struct {},
-            Labels: struct {},
-        } },
+        struct { volumeConfig: struct { Name: string, Driver: string, DriverOpts: struct {}, Labels: struct {} } },
         union(enum) {
             @"201": Volume,
             @"500": ErrorResponse,
@@ -2260,10 +2142,7 @@ pub const @"/volumes/prune" = struct {
         struct { filters: string },
         void,
         union(enum) {
-            @"200": struct {
-                VolumesDeleted: []const string,
-                SpaceReclaimed: i32,
-            },
+            @"200": struct { VolumesDeleted: []const string, SpaceReclaimed: i32 },
             @"500": ErrorResponse,
         },
     );
@@ -2318,23 +2197,9 @@ pub const @"/networks/create" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { networkConfig: struct {
-            Name: string,
-            CheckDuplicate: ?bool = null,
-            Driver: ?string = null,
-            Internal: ?bool = null,
-            Attachable: ?bool = null,
-            Ingress: ?bool = null,
-            IPAM: ?IPAM = null,
-            EnableIPv6: ?bool = null,
-            Options: ?struct {} = null,
-            Labels: ?struct {} = null,
-        } },
+        struct { networkConfig: struct { Name: string, CheckDuplicate: ?bool = null, Driver: ?string = null, Internal: ?bool = null, Attachable: ?bool = null, Ingress: ?bool = null, IPAM: ?IPAM = null, EnableIPv6: ?bool = null, Options: ?struct {} = null, Labels: ?struct {} = null } },
         union(enum) {
-            @"201": struct {
-                Id: string,
-                Warning: string,
-            },
+            @"201": struct { Id: string, Warning: string },
             @"403": ErrorResponse,
             @"404": ErrorResponse,
             @"500": ErrorResponse,
@@ -2348,10 +2213,7 @@ pub const @"/networks/{id}/connect" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { container: struct {
-            Container: string,
-            EndpointConfig: EndpointSettings,
-        } },
+        struct { container: struct { Container: string, EndpointConfig: EndpointSettings } },
         union(enum) {
             @"200": void,
             @"403": ErrorResponse,
@@ -2367,10 +2229,7 @@ pub const @"/networks/{id}/disconnect" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { container: struct {
-            Container: string,
-            Force: bool,
-        } },
+        struct { container: struct { Container: string, Force: bool } },
         union(enum) {
             @"200": void,
             @"403": ErrorResponse,
@@ -2388,9 +2247,7 @@ pub const @"/networks/prune" = struct {
         struct { filters: string },
         void,
         union(enum) {
-            @"200": struct {
-                NetworksDeleted: []const string,
-            },
+            @"200": struct { NetworksDeleted: []const string },
             @"500": ErrorResponse,
         },
     );
@@ -2641,16 +2498,7 @@ pub const @"/swarm/init" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { body: struct {
-            ListenAddr: string,
-            AdvertiseAddr: string,
-            DataPathAddr: string,
-            DataPathPort: i32,
-            DefaultAddrPool: []const string,
-            ForceNewCluster: bool,
-            SubnetSize: i32,
-            Spec: SwarmSpec,
-        } },
+        struct { body: struct { ListenAddr: string, AdvertiseAddr: string, DataPathAddr: string, DataPathPort: i32, DefaultAddrPool: []const string, ForceNewCluster: bool, SubnetSize: i32, Spec: SwarmSpec } },
         union(enum) {
             @"200": string,
             @"400": ErrorResponse,
@@ -2666,13 +2514,7 @@ pub const @"/swarm/join" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { body: struct {
-            ListenAddr: string,
-            AdvertiseAddr: string,
-            DataPathAddr: string,
-            RemoteAddrs: []const string,
-            JoinToken: string,
-        } },
+        struct { body: struct { ListenAddr: string, AdvertiseAddr: string, DataPathAddr: string, RemoteAddrs: []const string, JoinToken: string } },
         union(enum) {
             @"200": void,
             @"400": ErrorResponse,
@@ -2721,9 +2563,7 @@ pub const @"/swarm/unlockkey" = struct {
         void,
         void,
         union(enum) {
-            @"200": struct {
-                UnlockKey: string,
-            },
+            @"200": struct { UnlockKey: string },
             @"500": ErrorResponse,
             @"503": ErrorResponse,
         },
@@ -2736,9 +2576,7 @@ pub const @"/swarm/unlock" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { body: struct {
-            UnlockKey: string,
-        } },
+        struct { body: struct { UnlockKey: string } },
         union(enum) {
             @"200": void,
             @"500": ErrorResponse,
@@ -2768,15 +2606,9 @@ pub const @"/services/create" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { body: internal.AllOf(&.{
-            ServiceSpec,
-            struct {},
-        }) },
+        struct { body: internal.AllOf(&.{ ServiceSpec, struct {} }) },
         union(enum) {
-            @"201": struct {
-                ID: string,
-                Warning: string,
-            },
+            @"201": struct { ID: string, Warning: string },
             @"400": ErrorResponse,
             @"403": ErrorResponse,
             @"409": ErrorResponse,
@@ -2821,14 +2653,8 @@ pub const @"/services/{id}/update" = struct {
         .post,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { version: i32, registryAuthFrom: enum {
-            spec,
-            @"previous-spec",
-        } = "spec", rollback: string },
-        struct { body: internal.AllOf(&.{
-            ServiceSpec,
-            struct {},
-        }) },
+        struct { version: i32, registryAuthFrom: enum { spec, @"previous-spec" } = "spec", rollback: string },
+        struct { body: internal.AllOf(&.{ ServiceSpec, struct {} }) },
         union(enum) {
             @"200": ServiceUpdateResponse,
             @"400": ErrorResponse,
@@ -2923,10 +2749,7 @@ pub const @"/secrets/create" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { body: internal.AllOf(&.{
-            SecretSpec,
-            struct {},
-        }) },
+        struct { body: internal.AllOf(&.{ SecretSpec, struct {} }) },
         union(enum) {
             @"201": IdResponse,
             @"409": ErrorResponse,
@@ -3004,10 +2827,7 @@ pub const @"/configs/create" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { body: internal.AllOf(&.{
-            ConfigSpec,
-            struct {},
-        }) },
+        struct { body: internal.AllOf(&.{ ConfigSpec, struct {} }) },
         union(enum) {
             @"201": IdResponse,
             @"409": ErrorResponse,
