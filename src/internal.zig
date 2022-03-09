@@ -59,8 +59,28 @@ pub fn Fn(comptime method: Method, comptime endpoint: string, comptime P: type, 
             },
         };
 
-        // TODO check P/Q/B against void and assign this to inner1/inner2/inner respectively, currently causes ICE
-        const real = inner;
+        const real = switch (P) {
+            void => switch (Q) {
+                void => switch (B) {
+                    void => unreachable,
+                    else => inner1_B,
+                },
+                else => switch (B) {
+                    void => inner1_Q,
+                    else => inner2_QB,
+                },
+            },
+            else => switch (Q) {
+                void => switch (B) {
+                    void => inner1_P,
+                    else => inner2_PB,
+                },
+                else => switch (B) {
+                    void => inner2_PQ,
+                    else => inner,
+                },
+            },
+        };
 
         fn inner1_P(alloc: std.mem.Allocator, args: P) !R {
             return inner(alloc, args, {}, {});
