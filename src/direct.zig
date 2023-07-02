@@ -14,7 +14,12 @@ pub const Port = struct {
 };
 
 pub const MountPoint = struct {
-    Type: string,
+    Type: enum {
+        bind,
+        volume,
+        tmpfs,
+        npipe,
+    },
     Name: string,
     Source: string,
     Destination: string,
@@ -314,32 +319,32 @@ pub const GraphDriverData = struct {
     Data: struct {},
 };
 
-pub const Image = struct {
+pub const ImageInspect = struct {
     Id: string,
-    RepoTags: ?[]const string = null,
-    RepoDigests: ?[]const string = null,
+    RepoTags: []const string,
+    RepoDigests: []const string,
     Parent: string,
     Comment: string,
     Created: string,
     Container: string,
-    ContainerConfig: ?ContainerConfig = null,
+    ContainerConfig: ContainerConfig,
     DockerVersion: string,
     Author: string,
-    Config: ?ContainerConfig = null,
+    Config: ContainerConfig,
     Architecture: string,
+    Variant: string,
     Os: string,
-    OsVersion: ?string = null,
+    OsVersion: string,
     Size: i32,
     VirtualSize: i32,
     GraphDriver: GraphDriverData,
     RootFS: struct {
         Type: string,
         Layers: ?[]const string = null,
-        BaseLayer: ?string = null,
     },
-    Metadata: ?struct {
+    Metadata: struct {
         LastTagTime: string,
-    } = null,
+    },
 };
 
 pub const ImageSummary = struct {
@@ -388,6 +393,18 @@ pub const Volume = struct {
     } = null,
 };
 
+pub const VolumeCreateOptions = struct {
+    Name: string,
+    Driver: string,
+    DriverOpts: struct {},
+    Labels: struct {},
+};
+
+pub const VolumeListResponse = struct {
+    Volumes: []const Volume,
+    Warnings: []const string,
+};
+
 pub const Network = struct {
     Name: string,
     Id: string,
@@ -406,8 +423,15 @@ pub const Network = struct {
 
 pub const IPAM = struct {
     Driver: string,
-    Config: []const struct {},
+    Config: []const IPAMConfig,
     Options: struct {},
+};
+
+pub const IPAMConfig = struct {
+    Subnet: string,
+    IPRange: string,
+    Gateway: string,
+    AuxiliaryAddresses: struct {},
 };
 
 pub const NetworkContainer = struct {
@@ -432,7 +456,14 @@ pub const BuildInfo = struct {
 pub const BuildCache = struct {
     ID: string,
     Parent: string,
-    Type: string,
+    Type: enum {
+        internal,
+        frontend,
+        @"source.local",
+        @"source.git.checkout",
+        @"exec.cachemount",
+        regular,
+    },
     Description: string,
     InUse: bool,
     Shared: bool,
@@ -449,6 +480,7 @@ pub const ImageID = struct {
 pub const CreateImageInfo = struct {
     id: string,
     @"error": string,
+    errorDetail: ErrorDetail,
     status: string,
     progress: string,
     progressDetail: ProgressDetail,
@@ -824,7 +856,7 @@ pub const TaskSpec = struct {
     },
     Resources: struct {
         Limits: Limit,
-        Reservation: ResourceObject,
+        Reservations: ResourceObject,
     },
     RestartPolicy: struct {
         Condition: enum {
@@ -1034,7 +1066,7 @@ pub const ContainerSummary = struct {
     NetworkSettings: struct {
         Networks: struct {},
     },
-    Mounts: []const Mount,
+    Mounts: []const MountPoint,
 };
 
 pub const Driver = struct {
@@ -1096,6 +1128,15 @@ pub const ContainerState = struct {
     Health: Health,
 };
 
+pub const ContainerWaitResponse = struct {
+    StatusCode: i32,
+    Error: ?ContainerWaitExitError = null,
+};
+
+pub const ContainerWaitExitError = struct {
+    Message: string,
+};
+
 pub const SystemVersion = struct {
     Platform: struct {
         Name: string,
@@ -1131,6 +1172,7 @@ pub const SystemInfo = struct {
     MemoryLimit: bool,
     SwapLimit: bool,
     KernelMemory: bool,
+    KernelMemoryTCP: bool,
     CpuCfsPeriod: bool,
     CpuCfsQuota: bool,
     CPUShares: bool,
@@ -1327,7 +1369,7 @@ pub const @"/containers/create" = struct {
         .post,
         internal.name(Top, @This()),
         void,
-        struct { name: string },
+        struct { name: string, platform: string = "" },
         struct { body: internal.AllOf(&.{ ContainerConfig, struct { HostConfig: HostConfig, NetworkingConfig: NetworkingConfig } }) },
         union(enum) {
             @"201": struct { Id: string, Warnings: []const string },
@@ -1590,7 +1632,7 @@ pub const @"/containers/{id}/attach/ws" = struct {
         .get,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { detachKeys: string, logs: bool = false, stream: bool = false, stdin: bool = false, stdout: bool = false, stderr: bool = false },
+        struct { detachKeys: string, logs: bool = false, stream: bool = false },
         void,
         union(enum) {
             @"101": void,
@@ -1607,10 +1649,15 @@ pub const @"/containers/{id}/wait" = struct {
         .post,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { condition: string = "not-running" },
+        struct { condition: enum {
+            @"not-running",
+            @"next-exit",
+            removed,
+        } = "not-running" },
         void,
         union(enum) {
-            @"200": struct { StatusCode: i32, Error: ?struct { Message: string } = null },
+            @"200": ContainerWaitResponse,
+            @"400": ErrorResponse,
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1759,7 +1806,7 @@ pub const @"/images/{name}/json" = struct {
         void,
         void,
         union(enum) {
-            @"200": Image,
+            @"200": ImageInspect,
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
@@ -1867,6 +1914,7 @@ pub const @"/auth" = struct {
         union(enum) {
             @"200": struct { Status: string, IdentityToken: ?string = null },
             @"204": void,
+            @"401": ErrorResponse,
             @"500": ErrorResponse,
         },
     );
@@ -2082,7 +2130,7 @@ pub const @"/volumes" = struct {
         struct { filters: string },
         void,
         union(enum) {
-            @"200": struct { Volumes: []const Volume, Warnings: []const string },
+            @"200": VolumeListResponse,
             @"500": ErrorResponse,
         },
     );
@@ -2094,7 +2142,7 @@ pub const @"/volumes/create" = struct {
         internal.name(Top, @This()),
         void,
         void,
-        struct { volumeConfig: struct { Name: string, Driver: string, DriverOpts: struct {}, Labels: struct {} } },
+        struct { volumeConfig: VolumeCreateOptions },
         union(enum) {
             @"201": Volume,
             @"500": ErrorResponse,
@@ -2650,7 +2698,10 @@ pub const @"/services/{id}/update" = struct {
         .post,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { version: i32, registryAuthFrom: enum { spec, @"previous-spec" } = "spec", rollback: string },
+        struct { version: i32, registryAuthFrom: enum {
+            spec,
+            @"previous-spec",
+        } = "spec", rollback: string },
         struct { body: internal.AllOf(&.{ ServiceSpec, struct {} }) },
         union(enum) {
             @"200": ServiceUpdateResponse,
