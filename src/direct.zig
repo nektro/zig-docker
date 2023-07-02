@@ -214,6 +214,7 @@ pub const HostConfig = internal.AllOf(&.{
         VolumesFrom: []const string,
         Mounts: []const Mount,
         ConsoleSize: []const i32,
+        Annotations: struct {},
         CapAdd: []const string,
         CapDrop: []const string,
         CgroupnsMode: enum {
@@ -321,6 +322,13 @@ pub const GraphDriverData = struct {
     Data: struct {},
 };
 
+pub const FilesystemChange = struct {
+    Path: string,
+    Kind: ChangeType,
+};
+
+pub const ChangeType = i32;
+
 pub const ImageInspect = struct {
     Id: string,
     RepoTags: []const string,
@@ -357,7 +365,7 @@ pub const ImageSummary = struct {
     Created: i32,
     Size: i32,
     SharedSize: i32,
-    VirtualSize: i32,
+    VirtualSize: ?i32 = null,
     Labels: struct {},
     Containers: i32,
 };
@@ -1503,7 +1511,7 @@ pub const @"/containers/{id}/changes" = struct {
         void,
         void,
         union(enum) {
-            @"200": []const struct { Path: string, Kind: i32 },
+            @"200": []const FilesystemChange,
             @"404": ErrorResponse,
             @"500": ErrorResponse,
         },
