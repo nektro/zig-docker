@@ -19,6 +19,7 @@ pub const MountPoint = struct {
         volume,
         tmpfs,
         npipe,
+        cluster,
     },
     Name: string,
     Source: string,
@@ -56,6 +57,7 @@ pub const Mount = struct {
         volume,
         tmpfs,
         npipe,
+        cluster,
     },
     ReadOnly: bool,
     Consistency: string,
@@ -69,6 +71,7 @@ pub const Mount = struct {
             rslave,
         },
         NonRecursive: bool,
+        CreateMountpoint: bool,
     },
     VolumeOptions: struct {
         NoCopy: bool,
@@ -116,7 +119,6 @@ pub const Resources = struct {
     Devices: []const DeviceMapping,
     DeviceCgroupRules: []const string,
     DeviceRequests: []const DeviceRequest,
-    KernelMemory: i32,
     KernelMemoryTCP: i32,
     MemoryReservation: i32,
     MemorySwap: i32,
@@ -211,6 +213,7 @@ pub const HostConfig = internal.AllOf(&.{
         VolumeDriver: string,
         VolumesFrom: []const string,
         Mounts: []const Mount,
+        ConsoleSize: []const i32,
         CapAdd: []const string,
         CapDrop: []const string,
         CgroupnsMode: enum {
@@ -238,7 +241,6 @@ pub const HostConfig = internal.AllOf(&.{
         ShmSize: i32,
         Sysctls: struct {},
         Runtime: string,
-        ConsoleSize: []const i32,
         Isolation: enum {
             default,
             process,
@@ -386,6 +388,7 @@ pub const Volume = struct {
         local,
         global,
     },
+    ClusterVolume: ?ClusterVolume = null,
     Options: struct {},
     UsageData: ?struct {
         Size: i32,
@@ -398,6 +401,7 @@ pub const VolumeCreateOptions = struct {
     Driver: string,
     DriverOpts: struct {},
     Labels: struct {},
+    ClusterVolumeSpec: ClusterVolumeSpec,
 };
 
 pub const VolumeListResponse = struct {
@@ -456,6 +460,7 @@ pub const BuildInfo = struct {
 pub const BuildCache = struct {
     ID: string,
     Parent: string,
+    Parents: []const string,
     Type: enum {
         internal,
         frontend,
@@ -1128,6 +1133,11 @@ pub const ContainerState = struct {
     Health: Health,
 };
 
+pub const ContainerCreateResponse = struct {
+    Id: string,
+    Warnings: []const string,
+};
+
 pub const ContainerWaitResponse = struct {
     StatusCode: i32,
     Error: ?ContainerWaitExitError = null,
@@ -1171,7 +1181,6 @@ pub const SystemInfo = struct {
     Plugins: PluginsInfo,
     MemoryLimit: bool,
     SwapLimit: bool,
-    KernelMemory: bool,
     KernelMemoryTCP: bool,
     CpuCfsPeriod: bool,
     CpuCfsQuota: bool,
@@ -1349,6 +1358,66 @@ pub const DistributionInspect = struct {
     Platforms: []const OCIPlatform,
 };
 
+pub const ClusterVolume = struct {
+    ID: string,
+    Version: ObjectVersion,
+    CreatedAt: string,
+    UpdatedAt: string,
+    Spec: ClusterVolumeSpec,
+    Info: struct {
+        CapacityBytes: i32,
+        VolumeContext: struct {},
+        VolumeID: string,
+        AccessibleTopology: []const Topology,
+    },
+    PublishStatus: []const struct {
+        NodeID: string,
+        State: enum {
+            @"pending-publish",
+            published,
+            @"pending-node-unpublish",
+            @"pending-controller-unpublish",
+        },
+        PublishContext: struct {},
+    },
+};
+
+pub const ClusterVolumeSpec = struct {
+    Group: string,
+    AccessMode: struct {
+        Scope: enum {
+            single,
+            multi,
+        },
+        Sharing: enum {
+            none,
+            readonly,
+            onewriter,
+            all,
+        },
+        MountVolume: struct {},
+        Secrets: []const struct {
+            Key: string,
+            Secret: string,
+        },
+        AccessibilityRequirements: struct {
+            Requisite: []const Topology,
+            Preferred: []const Topology,
+        },
+        CapacityRange: struct {
+            RequiredBytes: i32,
+            LimitBytes: i32,
+        },
+        Availability: enum {
+            active,
+            pause,
+            drain,
+        },
+    },
+};
+
+pub const Topology = struct {};
+
 pub const @"/containers/json" = struct {
     pub usingnamespace internal.Fn(
         .get,
@@ -1372,7 +1441,7 @@ pub const @"/containers/create" = struct {
         struct { name: string, platform: string = "" },
         struct { body: internal.AllOf(&.{ ContainerConfig, struct { HostConfig: HostConfig, NetworkingConfig: NetworkingConfig } }) },
         union(enum) {
-            @"201": struct { Id: string, Warnings: []const string },
+            @"201": ContainerCreateResponse,
             @"400": ErrorResponse,
             @"404": ErrorResponse,
             @"409": ErrorResponse,
@@ -1507,7 +1576,7 @@ pub const @"/containers/{id}/stop" = struct {
         .post,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { t: i32 },
+        struct { signal: string, t: i32 },
         void,
         union(enum) {
             @"204": void,
@@ -1523,7 +1592,7 @@ pub const @"/containers/{id}/restart" = struct {
         .post,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { t: i32 },
+        struct { signal: string, t: i32 },
         void,
         union(enum) {
             @"204": void,
@@ -1632,7 +1701,7 @@ pub const @"/containers/{id}/attach/ws" = struct {
         .get,
         internal.name(Top, @This()),
         struct { id: string },
-        struct { detachKeys: string, logs: bool = false, stream: bool = false },
+        struct { detachKeys: string, logs: bool = false, stream: bool = false, stdin: bool = false, stdout: bool = false, stderr: bool = false },
         void,
         union(enum) {
             @"101": void,
@@ -1745,7 +1814,7 @@ pub const @"/images/json" = struct {
         .get,
         internal.name(Top, @This()),
         void,
-        struct { all: bool = false, filters: string, digests: bool = false },
+        struct { all: bool = false, filters: string, @"shared-size": bool = false, digests: bool = false },
         void,
         union(enum) {
             @"200": []const ImageSummary,
@@ -2009,7 +2078,12 @@ pub const @"/system/df" = struct {
         .get,
         internal.name(Top, @This()),
         void,
-        void,
+        struct { type: []const enum {
+            container,
+            image,
+            volume,
+            @"build-cache",
+        } },
         void,
         union(enum) {
             @"200": struct { LayersSize: i32, Images: []const ImageSummary, Containers: []const ContainerSummary, Volumes: []const Volume, BuildCache: []const BuildCache },
@@ -2066,7 +2140,7 @@ pub const @"/containers/{id}/exec" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { execConfig: struct { AttachStdin: bool, AttachStdout: bool, AttachStderr: bool, DetachKeys: string, Tty: bool, Env: []const string, Cmd: []const string, Privileged: bool, User: string, WorkingDir: string } },
+        struct { execConfig: struct { AttachStdin: bool, AttachStdout: bool, AttachStderr: bool, ConsoleSize: []const i32, DetachKeys: string, Tty: bool, Env: []const string, Cmd: []const string, Privileged: bool, User: string, WorkingDir: string } },
         union(enum) {
             @"201": IdResponse,
             @"404": ErrorResponse,
@@ -2082,7 +2156,7 @@ pub const @"/exec/{id}/start" = struct {
         internal.name(Top, @This()),
         struct { id: string },
         void,
-        struct { execStartConfig: struct { Detach: bool, Tty: bool } },
+        struct { execStartConfig: struct { Detach: bool, Tty: bool, ConsoleSize: []const i32 } },
         union(enum) {
             @"200": void,
             @"404": ErrorResponse,
@@ -2161,6 +2235,21 @@ pub const @"/volumes/{name}" = struct {
             @"200": Volume,
             @"404": ErrorResponse,
             @"500": ErrorResponse,
+        },
+    );
+
+    pub usingnamespace internal.Fn(
+        .put,
+        internal.name(Top, @This()),
+        struct { name: string },
+        struct { version: i32 },
+        struct { body: struct { Spec: ClusterVolumeSpec } },
+        union(enum) {
+            @"200": void,
+            @"400": ErrorResponse,
+            @"404": ErrorResponse,
+            @"500": ErrorResponse,
+            @"503": ErrorResponse,
         },
     );
 
