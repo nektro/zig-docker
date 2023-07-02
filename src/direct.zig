@@ -81,7 +81,6 @@ pub const Mount = struct {
 
 pub const RestartPolicy = struct {
     Name: enum {
-        @"",
         no,
         always,
         @"unless-stopped",
@@ -557,7 +556,6 @@ pub const Plugin = struct {
             Types: []const PluginInterfaceType,
             Socket: string,
             ProtocolScheme: ?enum {
-                @"",
                 @"moby.plugins.http/v1",
             } = null,
         },
@@ -1243,7 +1241,6 @@ pub const SwarmInfo = struct {
 };
 
 pub const LocalNodeState = enum {
-    @"",
     inactive,
     pending,
     active,

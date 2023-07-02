@@ -3,15 +3,17 @@ const deps = @import("./deps.zig");
 
 pub fn build(b: *std.build.Builder) void {
     const target = b.standardTargetOptions(.{});
+    const mode = b.option(std.builtin.Mode, "mode", "") orelse .Debug;
 
-    const mode = b.standardReleaseOptions();
-
-    const exe = b.addExecutable("generate", "generate.zig");
-    exe.setTarget(target);
-    exe.setBuildMode(mode);
+    const exe = b.addExecutable(.{
+        .name = "generate",
+        .root_source_file = .{ .path = "generate.zig" },
+        .target = target,
+        .optimize = mode,
+    });
     deps.addAllTo(exe);
 
-    const run_cmd = exe.run();
+    const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
 
     const run_step = b.step("run", "Run the app");
@@ -19,12 +21,15 @@ pub fn build(b: *std.build.Builder) void {
 
     //
 
-    const exe2 = b.addExecutable("test", "test.zig");
-    exe2.setTarget(target);
-    exe2.setBuildMode(mode);
+    const exe2 = b.addExecutable(.{
+        .name = "test",
+        .root_source_file = .{ .path = "test.zig" },
+        .target = target,
+        .optimize = mode,
+    });
     deps.addAllTo(exe2);
 
-    const run_cmd2 = exe2.run();
+    const run_cmd2 = b.addRunArtifact(exe2);
     run_cmd2.step.dependOn(b.getInstallStep());
 
     const run_step2 = b.step("test", "Run the test");

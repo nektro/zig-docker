@@ -7,14 +7,14 @@ const extras = @import("extras");
 const shared = @import("./shared.zig");
 
 pub fn AllOf(comptime xs: []const type) type {
-    var fields: []const std.builtin.TypeInfo.StructField = &.{};
+    var fields: []const std.builtin.Type.StructField = &.{};
     inline for (xs) |item| {
         fields = fields ++ std.meta.fields(item);
     }
     return Struct(fields);
 }
 
-fn Struct(comptime fields: []const std.builtin.TypeInfo.StructField) type {
+fn Struct(comptime fields: []const std.builtin.Type.StructField) type {
     return @Type(.{ .Struct = .{ .layout = .Auto, .fields = fields, .decls = &.{}, .is_tuple = false } });
 }
 
@@ -126,15 +126,14 @@ pub fn Fn(comptime method: Method, comptime endpoint: string, comptime P: type, 
             try req.do(fixMethod(method), headers, if (paramsB.inner.count() == 0) null else try paramsB.encode());
             const r = req.reader();
             const body_content = try r.readAllAlloc(alloc, 1024 * 1024 * 5);
-            const code = try std.fmt.allocPrint(alloc, "{d}", .{req.status.code});
-            std.log.debug("{d}", .{req.status.code});
+            const code = try std.fmt.allocPrint(alloc, "{d}", .{@enumToInt(req.status)});
+            std.log.debug("{d}", .{@enumToInt(req.status)});
             std.log.debug("{s}", .{body_content});
 
             inline for (std.meta.fields(R)) |item| {
                 if (std.mem.eql(u8, item.name, code)) {
-                    var jstream = std.json.TokenStream.init(body_content);
-                    const res = try std.json.parse(extras.FieldType(R, @field(std.meta.FieldEnum(R), item.name)), &jstream, .{
-                        .allocator = alloc,
+                    var jstream = std.json.Scanner.initCompleteInput(alloc, body_content);
+                    const res = try std.json.parseFromTokenSource(extras.FieldType(R, @field(std.meta.FieldEnum(R), item.name)), alloc, &jstream, .{
                         .ignore_unknown_fields = true,
                     });
                     return @unionInit(R, item.name, res);
@@ -162,7 +161,7 @@ fn newUrlValues(alloc: std.mem.Allocator, comptime T: type, args: T) !*UrlValues
     var params = try alloc.create(UrlValues);
     params.* = UrlValues.init(alloc);
     inline for (meta_fields(T)) |item| {
-        const U = item.field_type;
+        const U = item.type;
         const key = item.name;
         const value = @field(args, item.name);
 
@@ -179,7 +178,7 @@ fn newUrlValues(alloc: std.mem.Allocator, comptime T: type, args: T) !*UrlValues
     return params;
 }
 
-fn meta_fields(comptime T: type) []const std.builtin.TypeInfo.StructField {
+fn meta_fields(comptime T: type) []const std.builtin.Type.StructField {
     return switch (@typeInfo(T)) {
         .Struct => std.meta.fields(T),
         .Void => &.{},
@@ -187,7 +186,7 @@ fn meta_fields(comptime T: type) []const std.builtin.TypeInfo.StructField {
     };
 }
 
-fn fixMethod(m: Method) zfetch.Method {
+fn fixMethod(m: Method) std.http.Method {
     return switch (m) {
         .get => .GET,
         .head => .HEAD,

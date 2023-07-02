@@ -11,6 +11,6 @@ pub fn main() !void {
     });
 
     for (list.@"200") |item| {
-        std.log.info("{s} {s} {s} {d} {s} {s} {s}", .{ item.Id, item.Image, item.Command, item.Created, item.Status, item.Ports, item.Names });
+        std.log.info("{s} {s} {s} {d} {s} {any} {s}", .{ item.Id[0..20], item.Image, item.Command, item.Created, item.Status, item.Ports, item.Names });
     }
 }

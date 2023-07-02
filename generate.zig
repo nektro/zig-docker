@@ -65,7 +65,7 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, t
         const of = m.get("allOf");
         if (of != null) {
             try w.writeAll("internal.AllOf(&.{");
-            for (of.?.sequence) |item, i| {
+            for (of.?.sequence, 0..) |item, i| {
                 if (i > 0) try w.writeAll(",");
                 try printType(alloc, w, item.mapping, trailingcomma);
             }
@@ -90,7 +90,7 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, t
             if (m.get("properties") != null) {
                 const reqs = try m.get_string_array(alloc, "required");
 
-                for (m.get("properties").?.mapping.items) |item, i| {
+                for (m.get("properties").?.mapping.items, 0..) |item, i| {
                     if (i > 0) try w.writeAll(",");
                     try printId(w, item.key);
                     try w.writeAll(": ");
@@ -119,7 +119,7 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, t
     if (std.mem.eql(u8, apitype, "string")) {
         if (m.get("enum")) |enumcap| {
             try w.writeAll("enum {");
-            for (enumcap.sequence) |item, i| {
+            for (enumcap.sequence, 0..) |item, i| {
                 if (i > 0) try w.writeAll(",");
                 try printId(w, item.string);
             }
