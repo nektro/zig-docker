@@ -119,11 +119,11 @@ fn printType(alloc: std.mem.Allocator, w: std.fs.File.Writer, m: yaml.Mapping, t
     if (std.mem.eql(u8, apitype, "string")) {
         if (m.get("enum")) |enumcap| {
             try w.writeAll("enum {");
-            for (enumcap.sequence, 0..) |item, i| {
-                if (i > 0) try w.writeAll(",");
+            for (enumcap.sequence) |item| {
+                if (item.string.len == 0) continue;
                 try printId(w, item.string);
+                try w.writeAll(",");
             }
-            if (trailingcomma) try w.writeAll(",");
             try w.writeAll("}");
             return;
         }
@@ -144,7 +144,6 @@ fn contains(haystack: []const string, needle: string) bool {
 }
 
 fn printId(w: std.fs.File.Writer, id: string) !void {
-    if (id.len == 0) return try w.writeAll("@\"\""); // https://github.com/ziglang/zig/issues/11099
     try std.zig.fmtId(id).format("", .{}, w);
 }
 
@@ -199,7 +198,7 @@ fn capitalize(w: std.fs.File.Writer, s: string) !void {
 }
 
 fn hasParamsOf(m: yaml.Mapping, kind: string) bool {
-    for (m.getT("parameters", .sequence).?) |item| {
+    for (m.getT("parameters", .sequence) orelse &[_]yaml.Item{}) |item| {
         if (std.mem.eql(u8, item.mapping.get_string("in"), kind)) {
             return true;
         }
